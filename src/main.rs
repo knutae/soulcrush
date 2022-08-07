@@ -349,6 +349,37 @@ fn called_functions(func: &FunctionDefinition) -> HashSet<String> {
     return state.functions;
 }
 
+#[allow(dead_code)]
+fn all_functions_called_from_main(unit: &TranslationUnit) -> HashSet<String> {
+    struct State {
+        functions: HashSet<String>,
+    }
+
+    impl State {
+        fn new() -> Self {
+            Self {
+                functions: HashSet::new(),
+            }
+        }
+
+        fn process_function(&mut self, unit: &TranslationUnit, name: &str) {
+            if self.functions.contains(name) {
+                return;
+            }
+            self.functions.insert(name.to_string());
+            if let Some(func) = named_function(unit, name) {
+                for called_name in called_functions(func) {
+                    self.process_function(unit, called_name.as_str());
+                }
+            }
+        }
+    }
+
+    let mut state = State::new();
+    state.process_function(unit, "main");
+    return state.functions;
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -424,5 +455,13 @@ mod tests {
         );
         let func1 = named_function(&unit, "func1").expect("missing function func1");
         assert_eq!(called_functions(func1), HashSet::new());
+
+        assert_eq!(
+            all_functions_called_from_main(&unit),
+            HashSet::from(
+                ["cos", "func1", "func2", "main", "mat2", "rotate", "sin", "vec4"]
+                    .map(|x| x.to_string())
+            )
+        );
     }
 }

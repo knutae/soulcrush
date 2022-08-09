@@ -38,11 +38,10 @@ fn main() {
     let file_contents = fs::read_to_string(filename).expect("Failed to read file");
     let stage = ShaderStage::parse(file_contents);
     let unit = stage.expect("Failed to parse glsl file");
-    let functions = declared_functions(&unit);
-    println!("Declared functions: {functions:?}");
+    let functions = unused_functions(&unit);
+    println!("Unused functions: {functions:?}");
 }
 
-#[allow(dead_code)]
 fn declared_functions(unit: &TranslationUnit) -> Vec<String> {
     let mut names: Vec<String> = Vec::new();
     for decl in unit {
@@ -55,7 +54,6 @@ fn declared_functions(unit: &TranslationUnit) -> Vec<String> {
     return names;
 }
 
-#[allow(dead_code)]
 fn named_function<'a>(unit: &'a TranslationUnit, name: &str) -> Option<&'a FunctionDefinition> {
     for decl in unit {
         match decl {
@@ -71,7 +69,6 @@ fn named_function<'a>(unit: &'a TranslationUnit, name: &str) -> Option<&'a Funct
     return None;
 }
 
-#[allow(dead_code)]
 fn called_functions(func: &FunctionDefinition) -> HashSet<String> {
     struct State {
         functions: HashSet<String>,
@@ -349,7 +346,6 @@ fn called_functions(func: &FunctionDefinition) -> HashSet<String> {
     return state.functions;
 }
 
-#[allow(dead_code)]
 fn all_functions_called_from_main(unit: &TranslationUnit) -> HashSet<String> {
     struct State {
         functions: HashSet<String>,
@@ -380,7 +376,6 @@ fn all_functions_called_from_main(unit: &TranslationUnit) -> HashSet<String> {
     return state.functions;
 }
 
-#[allow(dead_code)]
 fn unused_functions(unit: &TranslationUnit) -> HashSet<String> {
     let declared = HashSet::from_iter(declared_functions(unit));
     let called = all_functions_called_from_main(unit);

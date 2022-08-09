@@ -38,12 +38,12 @@ fn main() {
     let file_contents = fs::read_to_string(filename).expect("Failed to read file");
     let stage = ShaderStage::parse(file_contents);
     let unit = stage.expect("Failed to parse glsl file");
-    let functions = declared_functions(unit);
+    let functions = declared_functions(&unit);
     println!("Declared functions: {functions:?}");
 }
 
 #[allow(dead_code)]
-fn declared_functions(unit: TranslationUnit) -> Vec<String> {
+fn declared_functions(unit: &TranslationUnit) -> Vec<String> {
     let mut names: Vec<String> = Vec::new();
     for decl in unit {
         match decl {
@@ -408,7 +408,7 @@ mod tests {
         let stage = ShaderStage::parse(glsl);
         assert!(stage.is_ok());
         let unit = stage.unwrap();
-        assert_eq!(declared_functions(unit), ["rotate", "main"]);
+        assert_eq!(declared_functions(&unit), ["rotate", "main"]);
     }
 
     #[test]

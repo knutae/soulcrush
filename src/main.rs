@@ -380,6 +380,14 @@ fn all_functions_called_from_main(unit: &TranslationUnit) -> HashSet<String> {
     return state.functions;
 }
 
+#[allow(dead_code)]
+fn unused_functions(unit: &TranslationUnit) -> HashSet<String> {
+    let declared = HashSet::from_iter(declared_functions(unit));
+    let called = all_functions_called_from_main(unit);
+    let unused = declared.difference(&called);
+    return unused.map(|x| x.to_owned()).collect();
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -463,5 +471,10 @@ mod tests {
                     .map(|x| x.to_string())
             )
         );
+
+        assert_eq!(
+            unused_functions(&unit),
+            HashSet::from(["func3"].map(|x| x.to_string()))
+        )
     }
 }

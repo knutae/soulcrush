@@ -383,6 +383,24 @@ fn unused_functions(unit: &TranslationUnit) -> HashSet<String> {
     return unused.map(|x| x.to_owned()).collect();
 }
 
+#[allow(unused)]
+fn remove_unused_functions(unit: &TranslationUnit) -> TranslationUnit {
+    let unused = unused_functions(unit);
+    let mut declarations: Vec<ExternalDeclaration> = Vec::new();
+    for declaration in unit {
+        match declaration {
+            ExternalDeclaration::FunctionDefinition(func) => {
+                if !unused.contains(&func.prototype.name.0) {
+                    declarations.push(declaration.clone());
+                }
+            }
+            _ => declarations.push(declaration.clone()),
+        }
+    }
+    return TranslationUnit::from_non_empty_iter(declarations)
+        .expect("Empty declarations (missing main function?)");
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -470,6 +488,12 @@ mod tests {
         assert_eq!(
             unused_functions(&unit),
             HashSet::from(["func3"].map(|x| x.to_string()))
-        )
+        );
+
+        let modified_unit = remove_unused_functions(&unit);
+        assert_eq!(
+            declared_functions(&modified_unit),
+            ["rotate", "func1", "func2", "main"]
+        );
     }
 }

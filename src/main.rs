@@ -28,6 +28,7 @@ use glsl::syntax::TypeQualifier;
 use glsl::syntax::TypeQualifierSpec;
 use glsl::syntax::TypeSpecifier;
 use glsl::syntax::TypeSpecifierNonArray;
+use glsl::transpiler::glsl::show_translation_unit;
 use std::collections::HashSet;
 use std::env;
 use std::fs;
@@ -38,8 +39,10 @@ fn main() {
     let file_contents = fs::read_to_string(filename).expect("Failed to read file");
     let stage = ShaderStage::parse(file_contents);
     let unit = stage.expect("Failed to parse glsl file");
-    let functions = unused_functions(&unit);
-    println!("Unused functions: {functions:?}");
+    let modified_unit = remove_unused_functions(&unit);
+    let mut output = String::new();
+    show_translation_unit(&mut output, &modified_unit);
+    println!("{output}");
 }
 
 fn declared_functions(unit: &TranslationUnit) -> Vec<String> {
@@ -383,7 +386,6 @@ fn unused_functions(unit: &TranslationUnit) -> HashSet<String> {
     return unused.map(|x| x.to_owned()).collect();
 }
 
-#[allow(unused)]
 fn remove_unused_functions(unit: &TranslationUnit) -> TranslationUnit {
     let unused = unused_functions(unit);
     let mut declarations: Vec<ExternalDeclaration> = Vec::new();
